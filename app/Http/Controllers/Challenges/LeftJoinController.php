@@ -28,7 +28,7 @@ class LeftJoinController extends Controller
         //       このとき INNER JOIN にしてレビュー 0 件の商品が消えないよう注意。
         $products = Product::query()
             ->orderBy('id')
-            ->limit(300)
+            ->limit(500)
             ->get()
             ->map(function (Product $product) {
                 return [

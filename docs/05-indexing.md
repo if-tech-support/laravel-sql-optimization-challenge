@@ -3,10 +3,13 @@
 ## 背景
 
 クエリをいくら綺麗に書いても、**インデックスがなければ DB はテーブル全体を走査（フルスキャン）**します。
-10 万件の `orders` から特定条件の行を探すと、インデックスなしでは 10 万行を読みます。
+50 万件の `orders` から特定条件の行を探すと、インデックスなしでは 50 万行を読みます。
 適切なインデックスがあれば、必要な行だけをピンポイントで読めます。
 
-このリポジトリのマイグレーションは、学習のため **意図的にインデックスを一切張っていません**。
+このリポジトリの `orders` テーブルには、学習のため **意図的に検索用インデックスを張っていません**
+（主キー `id` のみ）。`order_items.order_id` や `reviews.product_id` のように、他の課題で必要な
+結合キーには現実的なスキーマとして最初から索引を張ってありますが、`orders` の検索条件用の索引は
+この課題であなた自身に設計してもらいます。
 
 ## 対象
 
@@ -25,7 +28,7 @@ ORDER BY ordered_at DESC;
 
 > この課題は Debugbar ではなく、**ページ内に表示される「EXPLAIN 結果」の表**を見ます。
 
-1. ブラウザで <http://localhost/challenges/05-indexing> を開く。ページの上部に **EXPLAIN 結果の表**が出ているので、`type` 列が `ALL`（フルスキャン）、`key` 列が空、`rows` 列が約 10 万になっていることを確認する（読み方は [docs/how-to-measure.md](how-to-measure.md) の EXPLAIN の節を参照）。
+1. ブラウザで <http://localhost/challenges/05-indexing> を開く。ページの上部に **EXPLAIN 結果の表**が出ているので、`type` 列が `ALL`（フルスキャン）、`key` 列が空、`rows` 列が約 50 万、`Extra` に `Using filesort` が出ていることを確認する（読み方は [docs/how-to-measure.md](how-to-measure.md) の EXPLAIN の節を参照）。
 2. 新しいマイグレーションファイルを作る:
    ```bash
    ./vendor/bin/sail artisan make:migration add_indexes_to_orders_table
@@ -71,7 +74,8 @@ public function down(): void
 }
 ```
 
-> 余裕があれば、課題02〜04 で使った `order_items.order_id` / `reviews.product_id` などにも
-> インデックスが必要かを EXPLAIN で検証してみましょう（JOIN 先の結合キーは効きやすい）。
+> 補足: `order_items.order_id` や `reviews.product_id` には最初から索引が張ってあります。
+> 課題02〜04 で「最適化後はちゃんと速くなる」のはこの索引のおかげです。EXPLAIN で
+> これらの結合キーが実際に使われている様子（`type=ref`）も観察してみましょう。
 
 </details>

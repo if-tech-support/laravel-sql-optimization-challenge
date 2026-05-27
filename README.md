@@ -54,7 +54,7 @@ docker run --rm -v "$(pwd)":/var/www/html -w /var/www/html laravelsail/php83-com
 
 起動後、ブラウザで <http://localhost> を開くと課題一覧が表示されます。
 
-> **データ量について**: 既定では users 1万 / products 5千 / orders 10万 / order_items 約25万 / reviews 5万件を投入します。
+> **データ量について**: 既定では users 1万 / products 5千 / orders 50万 / order_items 約100万 / reviews 20万件を投入します（投入は十数秒〜30秒程度）。
 > マシンが非力で時間がかかりすぎる場合は `database/seeders/DatabaseSeeder.php` 上部の定数を縮小してください（課題の本質は変わりません）。
 
 ---

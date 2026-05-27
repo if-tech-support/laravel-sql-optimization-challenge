@@ -9,9 +9,12 @@ return new class extends Migration {
     {
         Schema::create('order_items', function (Blueprint $table) {
             $table->id();
-            // 【課題5】あえてインデックスを張っていません（order_id / product_id）。
-            //          JOIN・集計の主戦場です。EXPLAIN で結合のコストを観察してください。
-            $table->unsignedBigInteger('order_id');
+            // order_id には索引あり: 注文の明細をたどる（課題02 の items 件数など）のは
+            //   実運用で頻出のため、現実的なスキーマとして最初から張っている。
+            $table->unsignedBigInteger('order_id')->index();
+            // 一方 product_id には【あえて索引を張っていません】。
+            //   課題04（集計）で「商品ごとに SUM を N+1 で回す遅さ」と
+            //   「1 本の GROUP BY で一掃する速さ」の差を体感するための仕掛けです。
             $table->unsignedBigInteger('product_id');
             $table->unsignedInteger('quantity');
             $table->unsignedInteger('unit_price'); // 注文時点の価格（スナップショット）

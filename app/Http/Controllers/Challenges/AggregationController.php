@@ -24,7 +24,7 @@ class AggregationController extends Controller
         // TODO: withSum / selectRaw + groupBy + orderByDesc + limit で 1 クエリにする。
         $report = Product::query()
             ->orderBy('id')
-            ->limit(500)
+            ->limit(200)
             ->get()
             ->map(function (Product $product) {
                 $sales = $product->orderItems()

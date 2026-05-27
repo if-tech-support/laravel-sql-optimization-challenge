@@ -19,7 +19,6 @@ class SelectController extends Controller
     public function __invoke()
     {
         // 【遅い実装】SELECT * で全カラムを取得している。
-        // description（約 4KB の重いテキスト列）まで 2000 件ぶん転送・メモリ展開してしまう。
         // TODO: 表示に使う id / name / price だけを select() で取得する。
         $products = Product::query()
             ->orderBy('id')

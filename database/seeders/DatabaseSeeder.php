@@ -20,9 +20,9 @@ class DatabaseSeeder extends Seeder
     private const CATEGORIES = 50;
     private const USERS = 10_000;
     private const PRODUCTS = 5_000;
-    private const ORDERS = 100_000;
-    private const MAX_ITEMS_PER_ORDER = 4;
-    private const REVIEWS = 50_000;
+    private const ORDERS = 500_000;
+    private const MAX_ITEMS_PER_ORDER = 3;
+    private const REVIEWS = 200_000;
 
     /** バルク INSERT の 1 回あたり件数（プレースホルダ上限に注意して 2000 程度に） */
     private const CHUNK = 2_000;

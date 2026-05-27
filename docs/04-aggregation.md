@@ -11,45 +11,37 @@
 - ページ: <http://localhost/challenges/04-aggregation>
 - コントローラ: `app/Http/Controllers/Challenges/AggregationController.php`
 
-現状は商品を 1 件ずつループし、商品ごとに `SUM` クエリを発行（N+1 集計）したうえで、
+現状は商品を 200 件ずつループし、商品ごとに `SUM` クエリを発行（N+1 集計）したうえで、
 並び替えと上位 20 件の抽出を **PHP 側（`sortByDesc`/`take`）** で行っています。
+さらに `order_items.product_id` には**あえて索引を張っていない**ため、各 `SUM` が毎回フルスキャンになり、
+ページの表示に **十数秒**かかります（重さを体感してください）。
 
 ## やること
 
 > Debugbar の見方が分からない場合は、先に [docs/how-to-measure.md](how-to-measure.md) を読んでください。
 
-1. ブラウザで <http://localhost/challenges/04-aggregation> を開き、画面下部のバーの **`Queries` タブ**で本数を確認する（商品 500 件ぶん集計クエリが飛び、**500 本超**になっているはず）。
+1. ブラウザで <http://localhost/challenges/04-aggregation> を開く（表示に十数秒かかる）。画面下部のバーの **`Queries` タブ**で本数（商品 200 件ぶん集計クエリが飛び **200 本超**）と、右側の **`○s`（実行時間）**を確認する。
 2. `app/Http/Controllers/Challenges/AggregationController.php` を開き、売上 = `SUM(quantity * unit_price)` を `order_items` に対する **1 本の GROUP BY クエリ**で求める。
 3. 並び替え（`ORDER BY 売上 DESC`）と `LIMIT 20` も **DB 側**で行う（PHP の `sortByDesc` / `take` を消す。解答例は下記）。
-4. ファイルを保存し、**ブラウザを再読み込み**して `Queries` タブが **1 本**に、バー右側の `○ms`（実行時間）が大幅に減ることを確認する。
+4. ファイルを保存し、**ブラウザを再読み込み**して `Queries` タブが **数本**に、実行時間が **十数秒 → 1 秒台**に激減することを確認する。
 
 ## 達成基準
 
-- クエリ本数が **1 本**。
+- 集計が **1 本の GROUP BY クエリ**になっている（Debugbar 全体では数本だが、集計用クエリは 1 本）。
 - 並び替え・上限も SQL 側で行われている（PHP 側の `sortByDesc`/`take` が消えている）。
+- 実行時間が十数秒から 1 秒台へ大幅に短縮されている。
 
 ## ヒント
 
-- `OrderItem` を起点に `selectRaw('product_id, SUM(quantity * unit_price) as sales')` + `groupBy('product_id')` + `orderByDesc('sales')` + `limit(20)`。
-- 商品名も出したいなら `join('products', ...)` するか、上記で得た上位 20 件の `product_id` で商品を引く。
-- Eloquent 的に書くなら `Product::withSum('orderItems as sales', DB::raw('quantity * unit_price'))->orderByDesc('sales')->limit(20)` も使えます（`withSum` は LEFT JOIN 相当なので売上 0 の商品も残ります）。
+- 王道は `order_items` を起点にした **1 本の GROUP BY**：`selectRaw('product_id, SUM(quantity * unit_price) as sales')` + `groupBy('product_id')` + `orderByDesc('sales')` + `limit(20)`。これは `order_items` を **1 回だけ**走査して一気に集計します。
+- 商品名も出したいなら `join('products', ...)` するか、上位 20 件の `product_id` で商品を引きます。
+- ⚠️ **`withSum` の罠**: `Product::withSum('orderItems as sales', ...)` は一見きれいですが、内部的には**商品ごとに相関サブクエリ**を生成します。`order_items.product_id` に索引が無い本課題では、これは N+1 と同じく商品数ぶんのフルスキャンになり、**かえって致命的に遅くなります**（実測で数百秒）。「便利な書き方が常に速いとは限らない」「集計は 1 パスで済む GROUP BY が基本」という点をここで体感してください。索引があれば `withSum` も実用的になります（→ 課題05）。
 
 <details>
 <summary>解答例（自分で挑戦してから開く）</summary>
 
 ```php
-// withSum を使う場合（商品名も自然に取れる）
-$report = Product::query()
-    ->select(['id', 'name'])
-    ->withSum('orderItems as sales', DB::raw('quantity * unit_price'))
-    ->orderByDesc('sales')
-    ->limit(20)
-    ->get()
-    ->map(fn ($p) => ['name' => $p->name, 'sales' => (int) $p->sales]);
-```
-
-```php
-// 生の GROUP BY で書く場合
+// 王道：order_items を 1 回走査する GROUP BY（本課題ではこちらが速い）
 $report = DB::table('order_items')
     ->join('products', 'products.id', '=', 'order_items.product_id')
     ->selectRaw('products.name as name, SUM(order_items.quantity * order_items.unit_price) as sales')
@@ -58,6 +50,17 @@ $report = DB::table('order_items')
     ->limit(20)
     ->get()
     ->map(fn ($r) => ['name' => $r->name, 'sales' => (int) $r->sales]);
+```
+
+```php
+// 参考：withSum（簡潔だが相関サブクエリ。order_items.product_id に索引が無いと激遅）
+$report = Product::query()
+    ->select(['id', 'name'])
+    ->withSum('orderItems as sales', DB::raw('quantity * unit_price'))
+    ->orderByDesc('sales')
+    ->limit(20)
+    ->get()
+    ->map(fn ($p) => ['name' => $p->name, 'sales' => (int) $p->sales]);
 ```
 
 </details>
