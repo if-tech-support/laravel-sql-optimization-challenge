@@ -59,14 +59,21 @@ class DatabaseSeeder extends Seeder
         }, 'users');
 
         $this->command->info('Seeding products ...');
-        $this->insertInChunks(self::PRODUCTS, function (int $i) use ($now) {
+        // description は「実運用にありがちな重いテキスト列」を再現するため、あえて長文（約 4KB）にしている。
+        // これにより SELECT * で description まで取得すると、転送量とメモリが大きく膨らむ（課題01 の主眼）。
+        $heavyDescription = str_repeat(
+            'This product is crafted from high-quality materials and is designed for everyday use as well as special occasions. '
+            . 'Please review the detailed specifications, handling precautions, and warranty information before purchase. ',
+            18
+        );
+        $this->insertInChunks(self::PRODUCTS, function (int $i) use ($now, $heavyDescription) {
             return [
                 'category_id' => random_int(1, self::CATEGORIES),
                 'name' => 'Product ' . $i . ' ' . Str::random(6),
                 'sku' => 'SKU-' . str_pad((string) $i, 7, '0', STR_PAD_LEFT),
                 'price' => random_int(300, 50000),
                 'stock' => random_int(0, 500),
-                'description' => 'Sample description for product ' . $i . '.',
+                'description' => 'Product ' . $i . ' detail. ' . $heavyDescription,
                 'is_published' => random_int(1, 100) <= 90 ? 1 : 0,
                 'created_at' => $now,
                 'updated_at' => $now,
