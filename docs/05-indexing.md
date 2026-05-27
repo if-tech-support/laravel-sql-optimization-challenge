@@ -23,10 +23,19 @@ ORDER BY ordered_at DESC;
 
 ## やること
 
-1. ページを開き、EXPLAIN の `type` が `ALL`（フルスキャン）であることを確認する。
-   （`docs/how-to-measure.md` の EXPLAIN の読み方を参照）
-2. 新しいマイグレーションを作り、`orders` に適切なインデックスを追加する。
-3. `migrate` 後にページを再読み込みし、`type` が `ref`/`range` に変わり `rows` が激減することを確認する。
+> この課題は Debugbar ではなく、**ページ内に表示される「EXPLAIN 結果」の表**を見ます。
+
+1. ブラウザで <http://localhost/challenges/05-indexing> を開く。ページの上部に **EXPLAIN 結果の表**が出ているので、`type` 列が `ALL`（フルスキャン）、`key` 列が空、`rows` 列が約 10 万になっていることを確認する（読み方は [docs/how-to-measure.md](how-to-measure.md) の EXPLAIN の節を参照）。
+2. 新しいマイグレーションファイルを作る:
+   ```bash
+   ./vendor/bin/sail artisan make:migration add_indexes_to_orders_table
+   ```
+   `database/migrations/` に生成されたファイルを開き、`orders` に適切なインデックスを追加する（**複合インデックスの列順**がポイント。解答例は下記）。
+3. マイグレーションを実行する:
+   ```bash
+   ./vendor/bin/sail artisan migrate
+   ```
+4. **ブラウザを再読み込み**し、ページ上部の EXPLAIN の表で `type` が `ref` / `range` に変わり、`key` 列にインデックス名が出て、`rows` が激減（数件程度）していることを確認する。
 
 ## 達成基準
 

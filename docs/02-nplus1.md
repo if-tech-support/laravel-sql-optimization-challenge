@@ -14,9 +14,13 @@
 
 ## やること
 
-1. ページを開き、Debugbar の **Queries タブ**でクエリ本数を見る（200 本超のはず）。
-2. コントローラで必要なリレーションを Eager Load する。
-3. 再度開き、クエリ本数が数本（注文 + user + items ＝ 3 本程度）に減ることを確認する。
+> Debugbar の見方が分からない場合は、先に [docs/how-to-measure.md](how-to-measure.md) を読んでください。
+
+1. ブラウザで <http://localhost/challenges/02-nplus1> を開く。
+2. 画面下部のバーの **`Queries` タブ**をクリックする。タブのカッコ内の数字が **クエリ本数**で、ここが **200 本超**になっているはず。クリックして開くと、`select * from users where id = ?` のような **同じ形の SQL が延々と並ぶ**のが見える ← これが N+1 の正体。
+3. `app/Http/Controllers/Challenges/NPlusOneController.php` を開き、必要なリレーションを Eager Load する（解答例は下記）。
+4. ファイルを保存し、**ブラウザを再読み込み**（`⌘ + R` / `Ctrl + R`）する。
+5. `Queries` タブの本数が **3 本程度**まで激減していることを確認する。画面の表示内容は変わらないこともあわせて確認する。
 
 ## 達成基準
 

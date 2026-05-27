@@ -16,9 +16,12 @@
 
 ## やること
 
-1. 売上 = `SUM(quantity * unit_price)` を、`order_items` に対する **1 本の GROUP BY クエリ**で求める。
-2. 並び替え（`ORDER BY 売上 DESC`）と `LIMIT 20` も **DB 側**で行う。
-3. Debugbar でクエリ本数が 1 本に、実行時間が大幅に減ることを確認する。
+> Debugbar の見方が分からない場合は、先に [docs/how-to-measure.md](how-to-measure.md) を読んでください。
+
+1. ブラウザで <http://localhost/challenges/04-aggregation> を開き、画面下部のバーの **`Queries` タブ**で本数を確認する（商品 500 件ぶん集計クエリが飛び、**500 本超**になっているはず）。
+2. `app/Http/Controllers/Challenges/AggregationController.php` を開き、売上 = `SUM(quantity * unit_price)` を `order_items` に対する **1 本の GROUP BY クエリ**で求める。
+3. 並び替え（`ORDER BY 売上 DESC`）と `LIMIT 20` も **DB 側**で行う（PHP の `sortByDesc` / `take` を消す。解答例は下記）。
+4. ファイルを保存し、**ブラウザを再読み込み**して `Queries` タブが **1 本**に、バー右側の `○ms`（実行時間）が大幅に減ることを確認する。
 
 ## 達成基準
 
