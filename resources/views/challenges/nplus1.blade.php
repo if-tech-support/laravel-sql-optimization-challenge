@@ -17,7 +17,7 @@
             <tr>
                 <td>{{ $order->id }}</td>
                 <td>{{ $order->user->name }}</td>
-                <td>{{ $order->items->count() }}</td>
+                <td>{{ $order->items_count }}</td>
                 <td>{{ $order->ordered_at->format('Y-m-d') }}</td>
             </tr>
         @endforeach
