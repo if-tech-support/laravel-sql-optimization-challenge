@@ -25,7 +25,7 @@ class NPlusOneController extends Controller
         // 【遅い実装】リレーションを Eager Load していない。
         // TODO: with(['user', 'items']) を付けて N+1 を解消する。
         $orders = Order::query()
-            ->with('user')
+            ->with(['user:id,name'])
             ->withCount('items')
             ->orderByDesc('id')
             ->limit(300)
