@@ -27,13 +27,15 @@ class LeftJoinController extends Controller
         // TODO: withCount('reviews') か leftJoin + groupBy で 1 クエリにする。
         //       このとき INNER JOIN にしてレビュー 0 件の商品が消えないよう注意。
         $products = Product::query()
+            ->select(['id', 'name'])
+            ->withCount('reviews')
             ->orderBy('id')
             ->limit(500)
             ->get()
             ->map(function (Product $product) {
                 return [
                     'name' => $product->name,
-                    'reviews_count' => $product->reviews()->count(),
+                    'reviews_count' => $product->reviews_count,
                 ];
             });
 
