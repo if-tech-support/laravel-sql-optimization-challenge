@@ -23,19 +23,16 @@ class AggregationController extends Controller
         // 【遅い実装】商品ごとに sum クエリを発行し、PHP 側で並べ替えている。
         // TODO: withSum / selectRaw + groupBy + orderByDesc + limit で 1 クエリにする。
         $report = Product::query()
-            ->orderBy('id')
-            ->limit(200)
+            ->selectRaw('products.id, products.name, SUM(order_items.quantity * order_items.unit_price) as sales')
+            ->join('order_items', 'products.id', '=', 'order_items.product_id')
+            ->groupBy('products.id', 'products.name')
+            ->orderByDesc('sales')
+            ->limit(20)
             ->get()
-            ->map(function (Product $product) {
-                $sales = $product->orderItems()
-                    ->selectRaw('SUM(quantity * unit_price) as total')
-                    ->value('total') ?? 0;
-
-                return ['name' => $product->name, 'sales' => (int) $sales];
-            })
-            ->sortByDesc('sales')
-            ->take(20)
-            ->values();
+            ->map(fn ($r) => [
+                'name' => $r->name,
+                'sales' => (int) $r->sales,
+            ]);
 
         return view('challenges.aggregation', ['report' => $report]);
     }
