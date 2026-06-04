@@ -21,9 +21,11 @@ class SelectController extends Controller
         // 【遅い実装】SELECT * で全カラムを取得している。
         // TODO: 表示に使う id / name / price だけを select() で取得する。
         $products = Product::query()
+            ->select('id', 'name', 'price')
             ->orderBy('id')
             ->limit(2000)
             ->get();
+            
 
         return view('challenges.select', ['products' => $products]);
     }
