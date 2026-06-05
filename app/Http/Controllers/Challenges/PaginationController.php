@@ -26,8 +26,9 @@ class PaginationController extends Controller
         // 【遅い実装】OFFSET 方式のページネーション。
         // TODO: cursorPaginate(20) に置き換え、深いページでの挙動を比較する。
         $orders = Order::query()
+            ->select(['id', 'user_id', 'status', 'ordered_at'])
             ->orderBy('id')
-            ->paginate(20);
+            ->cursorPaginate(20);
 
         return view('challenges.pagination', ['orders' => $orders]);
     }
